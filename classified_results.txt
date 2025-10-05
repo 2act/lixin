@@ -1,0 +1,14 @@
+分类报告：
+                         precision    recall  f1-score   support
+
+            Carbendazim       1.00      0.90      0.95        10
+Chlorantraniliformamide       1.00      1.00      1.00        10
+                Mixture       0.90      1.00      0.95         9
+
+               accuracy                           0.97        29
+              macro avg       0.97      0.97      0.96        29
+           weighted avg       0.97      0.97      0.97        29
+混淆矩阵：
+[[ 9  0  1]
+ [ 0 10  0]
+ [ 0  0  9]]
