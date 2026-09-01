@@ -1,0 +1,30 @@
+输入文件：data_r1/cabbage/4.xlsx
+真实标签规则：曲线表头以0开头 -> None；否则 -> Mixture。
+分类结果：
+曲线 1 [0-1]: 真实=None, 预测=Mixture
+曲线 2 [0-2]: 真实=None, 预测=None
+曲线 3 [1ul]: 真实=Mixture, 预测=Mixture
+曲线 4 [3ul]: 真实=Mixture, 预测=Mixture
+曲线 5 [5ul]: 真实=Mixture, 预测=Mixture
+曲线 6 [10ul]: 真实=Mixture, 预测=Mixture
+曲线 7 [15ul]: 真实=Mixture, 预测=Mixture
+曲线 8 [20ul]: 真实=Mixture, 预测=Mixture
+曲线 9 [30ul]: 真实=Mixture, 预测=Mixture
+曲线 10 [40ul]: 真实=Mixture, 预测=Mixture
+曲线 11 [50ul]: 真实=Mixture, 预测=Mixture
+曲线 12 [60ul]: 真实=Mixture, 预测=Mixture
+曲线 13 [80ul]: 真实=Mixture, 预测=Mixture
+曲线 14 [100ul]: 真实=Mixture, 预测=Mixture
+
+分类报告：
+              precision    recall  f1-score   support
+
+        None       1.00      0.50      0.67         2
+     Mixture       0.92      1.00      0.96        12
+
+    accuracy                           0.93        14
+   macro avg       0.96      0.75      0.81        14
+weighted avg       0.93      0.93      0.92        14
+混淆矩阵（标签顺序 ['None', 'Mixture']）：
+[[ 1  1]
+ [ 0 12]]

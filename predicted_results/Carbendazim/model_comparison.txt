@@ -1,0 +1,13 @@
+RandomForest vs LinearRegression
+================================
+RF RMSE_mean: 2.752017547e-05
+Linear RMSE_mean: 4.388529109e-05
+RMSE improvement (%): 37.2907
+
+RF MAE_mean: 1.661336516e-05
+Linear MAE_mean: 3.233348641e-05
+MAE improvement (%): 48.6187
+
+RF R2_mean: 0.9977330403
+Linear R2_mean: 0.9938510785
+R2 absolute improvement: 0.003881961797

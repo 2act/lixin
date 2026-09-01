@@ -1,0 +1,30 @@
+输入文件：data_r1/strawberry/1.xlsx
+真实标签规则：曲线表头以0开头 -> None；否则 -> Mixture。
+分类结果：
+曲线 1 [0-2]: 真实=None, 预测=None
+曲线 2 [0-3]: 真实=None, 预测=None
+曲线 3 [100ul]: 真实=Mixture, 预测=Mixture
+曲线 4 [10ul]: 真实=Mixture, 预测=Mixture
+曲线 5 [15ul]: 真实=Mixture, 预测=Mixture
+曲线 6 [1ul]: 真实=Mixture, 预测=None
+曲线 7 [20ul]: 真实=Mixture, 预测=Mixture
+曲线 8 [30ul]: 真实=Mixture, 预测=Mixture
+曲线 9 [3ul]: 真实=Mixture, 预测=Mixture
+曲线 10 [40ul]: 真实=Mixture, 预测=Mixture
+曲线 11 [50ul]: 真实=Mixture, 预测=Mixture
+曲线 12 [5ul]: 真实=Mixture, 预测=Mixture
+曲线 13 [60ul]: 真实=Mixture, 预测=Mixture
+曲线 14 [80ul]: 真实=Mixture, 预测=Mixture
+
+分类报告：
+              precision    recall  f1-score   support
+
+        None       0.67      1.00      0.80         2
+     Mixture       1.00      0.92      0.96        12
+
+    accuracy                           0.93        14
+   macro avg       0.83      0.96      0.88        14
+weighted avg       0.95      0.93      0.93        14
+混淆矩阵（标签顺序 ['None', 'Mixture']）：
+[[ 2  0]
+ [ 1 11]]

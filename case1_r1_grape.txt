@@ -1,0 +1,29 @@
+输入文件：data_r1/grape/3.xlsx
+真实标签规则：曲线表头以0开头 -> None；否则 -> Mixture。
+分类结果：
+曲线 1 [0-2]: 真实=None, 预测=None
+曲线 2 [1ul]: 真实=Mixture, 预测=Chlorantraniliformamide
+曲线 3 [3ul]: 真实=Mixture, 预测=Mixture
+曲线 4 [5ul]: 真实=Mixture, 预测=Mixture
+曲线 5 [10ul]: 真实=Mixture, 预测=Mixture
+曲线 6 [15ul]: 真实=Mixture, 预测=Mixture
+曲线 7 [20ul]: 真实=Mixture, 预测=Mixture
+曲线 8 [30ul]: 真实=Mixture, 预测=Mixture
+曲线 9 [40ul]: 真实=Mixture, 预测=Mixture
+曲线 10 [50ul]: 真实=Mixture, 预测=Mixture
+曲线 11 [60ul]: 真实=Mixture, 预测=Mixture
+曲线 12 [80ul]: 真实=Mixture, 预测=Mixture
+曲线 13 [100ul]: 真实=Mixture, 预测=Mixture
+
+分类报告：
+              precision    recall  f1-score   support
+
+        None       1.00      1.00      1.00         1
+     Mixture       1.00      0.92      0.96        12
+
+   micro avg       1.00      0.92      0.96        13
+   macro avg       1.00      0.96      0.98        13
+weighted avg       1.00      0.92      0.96        13
+混淆矩阵（标签顺序 ['None', 'Mixture']）：
+[[ 1  0]
+ [ 0 11]]

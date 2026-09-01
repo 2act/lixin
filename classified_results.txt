@@ -1,16 +1,59 @@
-分类报告：
-                         precision    recall  f1-score   support
+输入目录：data_r1
+递归扫描 xlsx 文件数：3
+总曲线数：41
+真实标签规则：曲线表头以0开头 -> None；否则 -> Mixture。
 
-            Carbendazim       0.97      1.00      0.99       222
-Chlorantraniliformamide       0.96      0.96      0.96       153
-                Mixture       1.00      0.97      0.98       117
-                   None       1.00      0.91      0.95        23
+cabbage/4.xlsx | 曲线 1 [0-1] | 真实=None | 预测=Mixture | 正确=False
+cabbage/4.xlsx | 曲线 2 [0-2] | 真实=None | 预测=None | 正确=True
+cabbage/4.xlsx | 曲线 3 [1ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 4 [3ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 5 [5ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 6 [10ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 7 [15ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 8 [20ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 9 [30ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 10 [40ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 11 [50ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 12 [60ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 13 [80ul] | 真实=Mixture | 预测=Mixture | 正确=True
+cabbage/4.xlsx | 曲线 14 [100ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 1 [0-2] | 真实=None | 预测=None | 正确=True
+grape/3.xlsx | 曲线 2 [1ul] | 真实=Mixture | 预测=Chlorantraniliformamide | 正确=False
+grape/3.xlsx | 曲线 3 [3ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 4 [5ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 5 [10ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 6 [15ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 7 [20ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 8 [30ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 9 [40ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 10 [50ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 11 [60ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 12 [80ul] | 真实=Mixture | 预测=Mixture | 正确=True
+grape/3.xlsx | 曲线 13 [100ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 1 [0-2] | 真实=None | 预测=None | 正确=True
+strawberry/1.xlsx | 曲线 2 [0-3] | 真实=None | 预测=None | 正确=True
+strawberry/1.xlsx | 曲线 3 [100ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 4 [10ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 5 [15ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 6 [1ul] | 真实=Mixture | 预测=None | 正确=False
+strawberry/1.xlsx | 曲线 7 [20ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 8 [30ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 9 [3ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 10 [40ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 11 [50ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 12 [5ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 13 [60ul] | 真实=Mixture | 预测=Mixture | 正确=True
+strawberry/1.xlsx | 曲线 14 [80ul] | 真实=Mixture | 预测=Mixture | 正确=True
 
-               accuracy                           0.98       515
-              macro avg       0.98      0.96      0.97       515
-           weighted avg       0.98      0.98      0.98       515
-混淆矩阵：
-[[222   0   0   0]
- [  6 147   0   0]
- [  0   4 113   0]
- [  0   2   0  21]]
+全部文件汇总分类报告：
+              precision    recall  f1-score   support
+
+        None       0.80      0.80      0.80         5
+     Mixture       0.97      0.94      0.96        36
+
+   micro avg       0.95      0.93      0.94        41
+   macro avg       0.89      0.87      0.88        41
+weighted avg       0.95      0.93      0.94        41
+全部文件汇总混淆矩阵（标签顺序 ['None', 'Mixture']）：
+[[ 4  1]
+ [ 1 34]]

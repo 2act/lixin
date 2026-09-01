@@ -1,0 +1,5 @@
+﻿,Pred_Carbendazim,Pred_Chlorantraniliformamide,Pred_Mixture,Pred_None
+True_Carbendazim,0,0,0,0
+True_Chlorantraniliformamide,0,0,0,0
+True_Mixture,0,1,34,1
+True_None,0,0,1,4
