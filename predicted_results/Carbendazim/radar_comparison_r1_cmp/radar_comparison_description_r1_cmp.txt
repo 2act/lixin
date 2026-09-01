@@ -1,0 +1,50 @@
+RF / LinearRegression 雷达图对比说明（r1_cmp）
+====================================================
+
+一、目的
+本模块只新增模型预测效果的多指标雷达图，不改变原程序既有的训练、KFold/CV、
+模型缓存、RandomForest、LinearRegression、残差分析、预测曲线、相关性热力图、
+CSV 结果与模型保存功能。
+
+二、雷达图使用的数据
+雷达图使用原程序在全量模型训练完成后，由 predict_and_attach() 生成的实际预测
+曲线，即：真实目标曲线 vs RandomForest 预测曲线 vs LinearRegression 预测曲线。
+它不是用来替代原程序 CV 指标，而是作为“实际预测曲线拟合表现”的附加可视化。
+
+三、六个雷达指标（全部统一为 0~1，越大越好）
+1. R2：R2 截断到 [0, 1]。
+2. 1/(1+NRMSE)：NRMSE = RMSE / 真实曲线幅值范围。
+3. 1/(1+NMAE)：NMAE = MAE / 真实曲线幅值范围。
+4. Pearson r：相关系数截断到 [0, 1]。
+5. Peak accuracy：真实与预测曲线绝对峰值幅值的一致性。
+6. Residual stability：1/(1 + std(残差)/std(真实曲线))。
+
+注意：没有针对 RF 和 Linear 做模型间 min-max 归一化；两个模型使用完全相同的
+公式和绝对尺度，从而避免人为拉大模型之间的视觉差异。
+
+四、新增结果文件
+radar_comparison_r1_cmp/radar_overall_r1_cmp.png
+    全部 DataFrame 平均后的总雷达图，300 dpi。
+
+radar_comparison_r1_cmp/per_df_r1_cmp/df_N_radar_r1_cmp.png
+    每个 DataFrame 单独的 RF / Linear 雷达图，300 dpi。
+
+radar_comparison_r1_cmp/radar_raw_metrics_r1_cmp.csv
+    原始评价指标，包括 RMSE、MAE、R2、Pearson_r、NRMSE、NMAE、峰值误差指标、
+    残差标准差比。既包含每个 DF，也包含 Overall。
+
+radar_comparison_r1_cmp/radar_scores_r1_cmp.csv
+    雷达图实际使用的 0~1 分数，宽表格式，可直接在 Excel、Origin、MATLAB、Python
+    中重新绘图。
+
+radar_comparison_r1_cmp/radar_plot_data_r1_cmp.csv
+    雷达图实际使用数据的长表格式：Scope、DF_index、Method、Metric、Score。
+    这是最方便进行后续论文绘图或换绘图软件的文件。
+
+radar_comparison_r1_cmp/radar_comparison_description_r1_cmp.txt
+    本说明文件在每个 save_root 下自动保存一份。
+
+五、如何理解
+雷达图越接近外圈表示对应指标越好。不能只根据雷达图面积作统计结论；正式比较时
+仍应同时查看原程序保存的 RMSE、MAE、R2 以及预测曲线。雷达图主要用于多指标的
+直观汇总展示。

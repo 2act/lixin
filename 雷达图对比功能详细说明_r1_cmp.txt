@@ -1,0 +1,221 @@
+case2_r1_cmp.py —— RandomForest / LinearRegression 雷达图对比功能详细说明
+=======================================================================
+
+一、修改原则
+----------
+本版本严格以用户提供的 case2_r1_cmp.py 为基础，只新增“RandomForest 与
+LinearRegression 的多指标雷达图对比及结果保存”模块。
+
+原程序已有功能均保留，包括但不限于：
+1. Excel 数据读取与列名清洗；
+2. 0-1、0-2、0-3 ... 零浓度重复列处理；
+3. 公共列筛选；
+4. 特征/目标构建；
+5. RandomForest 多输出回归；
+6. KFold / cross_val_predict 交叉验证；
+7. LinearRegression 基线；
+8. 模型 joblib 保存与缓存读取；
+9. CV 指标与模型比较结果；
+10. 残差图、残差 CSV、QQ 图；
+11. RF / Linear / True 曲线直接对比图；
+12. 输出相关性热力图；
+13. predicted_results 下原有 CSV、预测 DataFrame 与图片保存。
+
+本次没有删除或替换上述功能；雷达图模块是在 RF 与 Linear 的实际预测 DataFrame
+已经生成后额外调用，因此不会改变原程序现有模型训练与预测结果。
+
+二、为什么雷达图不能直接使用分类指标
+------------------------------
+示例图片里的 Accuracy、Sensitivity、Specificity、F1、AUC 等属于分类任务指标。
+case2_r1_cmp.py 当前执行的是连续值曲线回归，因此本版本改用与回归预测曲线相匹配
+的 6 个指标，并统一映射到 0~1，且统一规定“越大越好”。
+
+三、雷达图六个指标及定义
+----------------------
+1. R2
+   原始 R2 直接计算；用于雷达图时截断到 [0,1]：
+
+       R2_score = clip(R2, 0, 1)
+
+2. RMSE score
+   先计算：
+
+       RMSE = sqrt(mean((y_true - y_pred)^2))
+       NRMSE = RMSE / (max(y_true) - min(y_true))
+
+   再映射到 0~1：
+
+       RMSE_score = 1 / (1 + NRMSE)
+
+   RMSE 越小，RMSE_score 越接近 1。
+
+3. MAE score
+   先计算：
+
+       MAE = mean(abs(y_true - y_pred))
+       NMAE = MAE / (max(y_true) - min(y_true))
+
+   再映射：
+
+       MAE_score = 1 / (1 + NMAE)
+
+4. Pearson r
+   计算真实曲线和预测曲线的 Pearson 相关系数；雷达图中截断到 [0,1]。
+   越接近 1，说明预测曲线整体形状/同步变化关系越一致。
+
+5. Peak accuracy
+   使用真实曲线和预测曲线的“绝对峰值幅值”比较：
+
+       Peak_accuracy = 1 - |peak_pred - peak_true| / |peak_true|
+
+   最终截断到 [0,1]。
+   该指标用来补充 RMSE/MAE，体现模型对峰值幅度的保持能力。
+
+6. Residual stability
+   定义：
+
+       residual = y_true - y_pred
+       residual_std_ratio = std(residual) / std(y_true)
+       Residual_stability = 1 / (1 + residual_std_ratio)
+
+   越接近 1，说明残差相对真实曲线自身波动更小、更稳定。
+
+四、归一化设计为什么这样做
+------------------------
+本程序没有采用“在 RF 和 Linear 两个模型之间做 min-max 归一化”的方式。
+例如，不会把较好的模型强制变成 1、较差的模型强制变成 0。
+
+原因是这种做法会人为放大模型差异，尤其只有两个模型时视觉误导很严重。
+本版本所有指标均按照固定公式独立映射到 0~1，RF 和 Linear 使用完全相同的绝对尺度，
+因此雷达图的相对大小由实际预测误差决定。
+
+五、雷达图到底使用哪一组预测结果
+------------------------------
+本程序原来同时存在：
+1. cross_val_predict() 得到的 CV 预测结果；
+2. 最终模型 fit(X,y) 后，由 predict_and_attach() 得到的实际预测曲线。
+
+新增雷达图明确使用第 2 类数据：
+
+    dfs（真实曲线）
+    predicted_dfs（RandomForest 实际预测曲线）
+    linear_predicted_dfs（LinearRegression 实际预测曲线）
+
+也就是说，雷达图与程序原有的 RF / Linear / True 实际曲线对比图使用的是同一类预测
+结果，适合解释“图中预测曲线的综合表现”。
+
+注意：这不会替代原程序 CV 指标；原 CV 功能和 CV 结果仍完整保留。
+
+六、逐曲线、逐 DataFrame 与 Overall 的处理
+--------------------------------------
+对于每个 DataFrame：
+1. 对 meta['test_cols'] 中每一条目标曲线分别计算 6 个雷达指标；
+2. 再对该 DataFrame 内所有目标曲线取平均；
+3. 输出该 DataFrame 的独立雷达图。
+
+Overall：
+1. 先取得每个 DataFrame 的指标；
+2. 再在 DataFrame 之间取平均；
+3. 每个 DataFrame 权重相同，避免某个 DataFrame 因为样本行更多而主导总结果。
+
+七、新增结果目录和文件
+--------------------
+每一个原有 save_root，例如：
+
+    predicted_results/<folder_name>/
+
+下面会额外生成：
+
+    radar_comparison_r1_cmp/
+
+其中：
+
+1. radar_overall_r1_cmp.png
+   - RF 与 Linear 的总体雷达图；
+   - 300 dpi；
+   - 适合论文、PPT 或报告中直接查看。
+
+2. per_df_r1_cmp/df_N_radar_r1_cmp.png
+   - 每一个 DataFrame 单独生成一张雷达图；
+   - 文件名均以 r1_cmp 结尾；
+   - 用于检查总体平均是否掩盖某个具体实验文件的差异。
+
+3. radar_raw_metrics_r1_cmp.csv
+   保存未映射的原始指标，字段主要包括：
+   - Scope
+   - DF_index
+   - Method
+   - RMSE
+   - MAE
+   - R2
+   - Pearson_r
+   - NRMSE
+   - NMAE
+   - Peak_accuracy_raw
+   - Residual_std_ratio
+
+   同时包含逐 DF 和 Overall。
+
+4. radar_scores_r1_cmp.csv
+   保存雷达图实际使用的宽表数据：
+   - R2_score
+   - RMSE_score
+   - MAE_score
+   - Correlation_score
+   - Peak_accuracy
+   - Residual_stability
+
+   可直接导入 Excel、Origin、MATLAB、Python 重新绘制雷达图。
+
+5. radar_plot_data_r1_cmp.csv
+   保存雷达图实际绘图数据的长表格式：
+   - Scope
+   - DF_index
+   - Method
+   - Metric
+   - Score
+
+   如果后续要统一论文绘图风格，优先使用该文件，最方便进行透视、分组与重新绘图。
+
+6. radar_comparison_description_r1_cmp.txt
+   程序运行时自动在每个 radar_comparison_r1_cmp 目录内保存一份说明，方便结果目录
+   脱离代码后仍能知道指标定义和数据含义。
+
+八、如何判断 RF 是否更好
+----------------------
+雷达图每一维都规定为“越靠外越好”。
+若 RandomForest 多边形在多数维度明显位于 LinearRegression 外侧，说明 RF 在这些维度
+综合表现更好。
+
+但不建议只用雷达图面积下结论。正式写论文/报告时应同时引用：
+1. 原始 RMSE；
+2. 原始 MAE；
+3. R2；
+4. RF / Linear / True 实际预测曲线；
+5. 雷达图作为多指标综合可视化。
+
+九、原程序结果文件是否被改名
+--------------------------
+没有。
+
+为了满足“原功能一个都不能变”，本版本保留原程序全部已有文件名和保存逻辑。
+只有本次新增的雷达图相关文件统一使用 _r1_cmp 结尾。
+
+因此运行新程序不会因为本次修改导致原有分析脚本找不到原结果文件。
+
+十、运行方式
+----------
+与原程序完全一致：
+
+    python case2_r1_cmp.py
+
+不新增强制命令行参数，也不改变原 main 中 base_dir、train_ratio、cv_folds、
+n_estimators、retrain 等配置逻辑。
+
+十一、代码检查
+------------
+交付前已对完整程序执行 Python 语法编译检查：
+
+    python -m py_compile case2_r1_cmp.py
+
+并单独使用模拟预测数组实际调用雷达指标计算和雷达图绘制函数，确认 PNG 能够正常生成。

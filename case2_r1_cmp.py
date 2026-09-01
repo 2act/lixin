@@ -646,6 +646,387 @@ def plot_predictions_for_dfs(
 
 
 # ================================================================
+# 6.1️⃣ RandomForest / LinearRegression 雷达图对比
+# ================================================================
+def _safe_r2(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """安全计算 R2；常数曲线无法定义 R2 时返回 0。"""
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    if y_true.size < 2 or np.std(y_true) < 1e-15:
+        return 0.0
+    value = r2_score(y_true, y_pred)
+    return float(value) if np.isfinite(value) else 0.0
+
+
+def _safe_corr(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """安全计算 Pearson 相关系数；常数曲线无法计算时返回 0。"""
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    if y_true.size < 2 or np.std(y_true) < 1e-15 or np.std(y_pred) < 1e-15:
+        return 0.0
+    value = np.corrcoef(y_true, y_pred)[0, 1]
+    return float(value) if np.isfinite(value) else 0.0
+
+
+def _single_curve_radar_metrics(
+    y_true: np.ndarray, y_pred: np.ndarray
+) -> Dict[str, float]:
+    """
+    计算一条真实曲线与预测曲线的原始指标和 0~1 雷达得分。
+
+    说明：
+    1. R2_score：R2 截断到 [0, 1]，越大越好；
+    2. RMSE_score = 1 / (1 + NRMSE)，NRMSE = RMSE / true_range；
+    3. MAE_score  = 1 / (1 + NMAE)，NMAE = MAE / true_range；
+    4. Correlation_score：Pearson r 截断到 [0, 1]；
+    5. Peak_accuracy：真实/预测曲线绝对峰值幅值的一致性，越接近 1 越好；
+    6. Residual_stability = 1 / (1 + std(residual) / std(y_true))。
+
+    所有模型严格使用相同公式，不做模型间 min-max 拉伸，避免人为放大差异。
+    """
+    y_true = np.asarray(y_true, dtype=float).ravel()
+    y_pred = np.asarray(y_pred, dtype=float).ravel()
+
+    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
+    mae = float(mean_absolute_error(y_true, y_pred))
+    r2 = _safe_r2(y_true, y_pred)
+    corr = _safe_corr(y_true, y_pred)
+
+    true_range = float(np.max(y_true) - np.min(y_true)) if y_true.size else 0.0
+    if true_range < 1e-15:
+        # 对近常数曲线，用真实信号典型幅值作为归一化尺度。
+        true_range = max(float(np.mean(np.abs(y_true))), 1e-15)
+
+    nrmse = rmse / true_range
+    nmae = mae / true_range
+
+    true_peak = float(np.max(np.abs(y_true))) if y_true.size else 0.0
+    pred_peak = float(np.max(np.abs(y_pred))) if y_pred.size else 0.0
+    peak_denom = max(true_peak, 1e-15)
+    peak_accuracy = 1.0 - abs(pred_peak - true_peak) / peak_denom
+
+    true_std = float(np.std(y_true))
+    residual_std = float(np.std(y_true - y_pred))
+    residual_std_ratio = residual_std / max(true_std, 1e-15)
+
+    return {
+        "RMSE": rmse,
+        "MAE": mae,
+        "R2": r2,
+        "Pearson_r": corr,
+        "NRMSE": nrmse,
+        "NMAE": nmae,
+        "Peak_accuracy_raw": peak_accuracy,
+        "Residual_std_ratio": residual_std_ratio,
+        "R2_score": float(np.clip(r2, 0.0, 1.0)),
+        "RMSE_score": float(np.clip(1.0 / (1.0 + nrmse), 0.0, 1.0)),
+        "MAE_score": float(np.clip(1.0 / (1.0 + nmae), 0.0, 1.0)),
+        "Correlation_score": float(np.clip(corr, 0.0, 1.0)),
+        "Peak_accuracy": float(np.clip(peak_accuracy, 0.0, 1.0)),
+        "Residual_stability": float(
+            np.clip(1.0 / (1.0 + residual_std_ratio), 0.0, 1.0)
+        ),
+    }
+
+
+def _aggregate_radar_metrics(
+    df_true: pd.DataFrame,
+    df_pred: pd.DataFrame,
+    meta: Dict[str, Any],
+    pred_suffix: str,
+) -> Dict[str, float]:
+    """对一个 DataFrame 内所有目标曲线逐条计算后取平均，避免长曲线直接拼接造成峰值指标失真。"""
+    rows = []
+    for col in meta["test_cols"]:
+        pred_col = f"{col}{pred_suffix}"
+        if pred_col not in df_pred.columns:
+            raise KeyError(f"雷达图计算缺少预测列：{pred_col}")
+        rows.append(
+            _single_curve_radar_metrics(
+                df_true[col].to_numpy(dtype=float),
+                df_pred[pred_col].to_numpy(dtype=float),
+            )
+        )
+
+    if not rows:
+        raise ValueError("没有可用于雷达图评价的目标曲线")
+
+    keys = rows[0].keys()
+    return {key: float(np.mean([row[key] for row in rows])) for key in keys}
+
+
+def _plot_model_radar(
+    score_rows: List[Dict[str, Any]],
+    save_path: str,
+    title: str,
+) -> None:
+    """绘制 RandomForest / LinearRegression 0~1 雷达图并保存 PNG。"""
+    metric_keys = [
+        "R2_score",
+        "RMSE_score",
+        "MAE_score",
+        "Correlation_score",
+        "Peak_accuracy",
+        "Residual_stability",
+    ]
+    metric_labels = [
+        "R2",
+        "1/(1+NRMSE)",
+        "1/(1+NMAE)",
+        "Pearson r",
+        "Peak accuracy",
+        "Residual stability",
+    ]
+
+    angles = np.linspace(0, 2 * np.pi, len(metric_keys), endpoint=False).tolist()
+    angles += angles[:1]
+
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={"polar": True})
+    for row in score_rows:
+        values = [float(row[key]) for key in metric_keys]
+        values += values[:1]
+        line = ax.plot(angles, values, linewidth=2, label=row["Method"])[0]
+        ax.fill(angles, values, alpha=0.12, color=line.get_color())
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(metric_labels)
+    ax.set_ylim(0.0, 1.0)
+    ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_title(title, pad=24)
+    ax.legend(loc="upper right", bbox_to_anchor=(1.28, 1.12))
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_rf_linear_radar_comparison(
+    dfs: List[pd.DataFrame],
+    rf_predicted_dfs: List[pd.DataFrame],
+    linear_predicted_dfs: List[pd.DataFrame],
+    meta: Dict[str, Any],
+    save_root: str,
+) -> None:
+    """
+    新增的 RF / Linear 雷达图综合对比模块。
+
+    不改变原有任何训练、CV、预测、曲线图或结果保存逻辑；这里只读取已经生成的
+    predicted_dfs / linear_predicted_dfs，额外计算和保存雷达图相关结果。
+
+    新增输出统一以 _r1_cmp 结尾。
+    """
+    radar_dir = os.path.join(save_root, "radar_comparison_r1_cmp")
+    per_df_dir = os.path.join(radar_dir, "per_df_r1_cmp")
+    os.makedirs(per_df_dir, exist_ok=True)
+
+    raw_rows = []
+    score_rows = []
+    long_rows = []
+
+    # 逐 DataFrame 计算，并保存每个 DataFrame 的雷达图。
+    for i, (df_true, df_rf, df_linear) in enumerate(
+        zip(dfs, rf_predicted_dfs, linear_predicted_dfs), start=1
+    ):
+        rf_metrics = _aggregate_radar_metrics(df_true, df_rf, meta, "_pred")
+        linear_metrics = _aggregate_radar_metrics(
+            df_true, df_linear, meta, "_linear_pred"
+        )
+
+        per_df_scores = []
+        for method, metrics in [
+            ("RandomForest", rf_metrics),
+            ("LinearRegression", linear_metrics),
+        ]:
+            raw_row = {"Scope": f"DF_{i}", "DF_index": i, "Method": method}
+            raw_row.update(
+                {
+                    k: metrics[k]
+                    for k in [
+                        "RMSE",
+                        "MAE",
+                        "R2",
+                        "Pearson_r",
+                        "NRMSE",
+                        "NMAE",
+                        "Peak_accuracy_raw",
+                        "Residual_std_ratio",
+                    ]
+                }
+            )
+            raw_rows.append(raw_row)
+
+            score_row = {"Scope": f"DF_{i}", "DF_index": i, "Method": method}
+            score_row.update(
+                {
+                    k: metrics[k]
+                    for k in [
+                        "R2_score",
+                        "RMSE_score",
+                        "MAE_score",
+                        "Correlation_score",
+                        "Peak_accuracy",
+                        "Residual_stability",
+                    ]
+                }
+            )
+            score_rows.append(score_row)
+            per_df_scores.append(score_row)
+
+            for metric in [
+                "R2_score",
+                "RMSE_score",
+                "MAE_score",
+                "Correlation_score",
+                "Peak_accuracy",
+                "Residual_stability",
+            ]:
+                long_rows.append(
+                    {
+                        "Scope": f"DF_{i}",
+                        "DF_index": i,
+                        "Method": method,
+                        "Metric": metric,
+                        "Score": metrics[metric],
+                    }
+                )
+
+        _plot_model_radar(
+            per_df_scores,
+            os.path.join(per_df_dir, f"df_{i}_radar_r1_cmp.png"),
+            f"DF {i}: RandomForest vs LinearRegression",
+        )
+
+    # Overall 使用“逐 DataFrame、逐指标平均”，保证每个 DataFrame 权重一致。
+    overall_raw_rows = []
+    overall_score_rows = []
+    for method in ["RandomForest", "LinearRegression"]:
+        method_raw = [r for r in raw_rows if r["Method"] == method]
+        method_score = [r for r in score_rows if r["Method"] == method]
+
+        raw_keys = [
+            "RMSE",
+            "MAE",
+            "R2",
+            "Pearson_r",
+            "NRMSE",
+            "NMAE",
+            "Peak_accuracy_raw",
+            "Residual_std_ratio",
+        ]
+        score_keys = [
+            "R2_score",
+            "RMSE_score",
+            "MAE_score",
+            "Correlation_score",
+            "Peak_accuracy",
+            "Residual_stability",
+        ]
+
+        overall_raw = {"Scope": "Overall", "DF_index": "All", "Method": method}
+        overall_raw.update(
+            {key: float(np.mean([row[key] for row in method_raw])) for key in raw_keys}
+        )
+        overall_raw_rows.append(overall_raw)
+
+        overall_score = {"Scope": "Overall", "DF_index": "All", "Method": method}
+        overall_score.update(
+            {
+                key: float(np.mean([row[key] for row in method_score]))
+                for key in score_keys
+            }
+        )
+        overall_score_rows.append(overall_score)
+
+        for metric in score_keys:
+            long_rows.append(
+                {
+                    "Scope": "Overall",
+                    "DF_index": "All",
+                    "Method": method,
+                    "Metric": metric,
+                    "Score": overall_score[metric],
+                }
+            )
+
+    pd.DataFrame(raw_rows + overall_raw_rows).to_csv(
+        os.path.join(radar_dir, "radar_raw_metrics_r1_cmp.csv"), index=False
+    )
+    pd.DataFrame(score_rows + overall_score_rows).to_csv(
+        os.path.join(radar_dir, "radar_scores_r1_cmp.csv"), index=False
+    )
+    pd.DataFrame(long_rows).to_csv(
+        os.path.join(radar_dir, "radar_plot_data_r1_cmp.csv"), index=False
+    )
+
+    _plot_model_radar(
+        overall_score_rows,
+        os.path.join(radar_dir, "radar_overall_r1_cmp.png"),
+        "Overall Prediction Performance: RandomForest vs LinearRegression",
+    )
+
+    # 将雷达图设计与所有文件含义写入运行结果目录，便于后续复核和重新绘图。
+    description = """RF / LinearRegression 雷达图对比说明（r1_cmp）
+====================================================
+
+一、目的
+本模块只新增模型预测效果的多指标雷达图，不改变原程序既有的训练、KFold/CV、
+模型缓存、RandomForest、LinearRegression、残差分析、预测曲线、相关性热力图、
+CSV 结果与模型保存功能。
+
+二、雷达图使用的数据
+雷达图使用原程序在全量模型训练完成后，由 predict_and_attach() 生成的实际预测
+曲线，即：真实目标曲线 vs RandomForest 预测曲线 vs LinearRegression 预测曲线。
+它不是用来替代原程序 CV 指标，而是作为“实际预测曲线拟合表现”的附加可视化。
+
+三、六个雷达指标（全部统一为 0~1，越大越好）
+1. R2：R2 截断到 [0, 1]。
+2. 1/(1+NRMSE)：NRMSE = RMSE / 真实曲线幅值范围。
+3. 1/(1+NMAE)：NMAE = MAE / 真实曲线幅值范围。
+4. Pearson r：相关系数截断到 [0, 1]。
+5. Peak accuracy：真实与预测曲线绝对峰值幅值的一致性。
+6. Residual stability：1/(1 + std(残差)/std(真实曲线))。
+
+注意：没有针对 RF 和 Linear 做模型间 min-max 归一化；两个模型使用完全相同的
+公式和绝对尺度，从而避免人为拉大模型之间的视觉差异。
+
+四、新增结果文件
+radar_comparison_r1_cmp/radar_overall_r1_cmp.png
+    全部 DataFrame 平均后的总雷达图，300 dpi。
+
+radar_comparison_r1_cmp/per_df_r1_cmp/df_N_radar_r1_cmp.png
+    每个 DataFrame 单独的 RF / Linear 雷达图，300 dpi。
+
+radar_comparison_r1_cmp/radar_raw_metrics_r1_cmp.csv
+    原始评价指标，包括 RMSE、MAE、R2、Pearson_r、NRMSE、NMAE、峰值误差指标、
+    残差标准差比。既包含每个 DF，也包含 Overall。
+
+radar_comparison_r1_cmp/radar_scores_r1_cmp.csv
+    雷达图实际使用的 0~1 分数，宽表格式，可直接在 Excel、Origin、MATLAB、Python
+    中重新绘图。
+
+radar_comparison_r1_cmp/radar_plot_data_r1_cmp.csv
+    雷达图实际使用数据的长表格式：Scope、DF_index、Method、Metric、Score。
+    这是最方便进行后续论文绘图或换绘图软件的文件。
+
+radar_comparison_r1_cmp/radar_comparison_description_r1_cmp.txt
+    本说明文件在每个 save_root 下自动保存一份。
+
+五、如何理解
+雷达图越接近外圈表示对应指标越好。不能只根据雷达图面积作统计结论；正式比较时
+仍应同时查看原程序保存的 RMSE、MAE、R2 以及预测曲线。雷达图主要用于多指标的
+直观汇总展示。
+"""
+    with open(
+        os.path.join(radar_dir, "radar_comparison_description_r1_cmp.txt"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+        f.write(description)
+
+    log.info("📡 RF / Linear 雷达图及绘图数据已保存到 %s", radar_dir)
+
+
+# ================================================================
 # 7️⃣ 保存评估结果函数
 # ================================================================
 def save_experiment_results(
@@ -978,6 +1359,17 @@ def full_experiment_pipeline(
         linear_predicted_dfs,
         meta,
         save_dir=os.path.join(save_root, "rf_vs_linear_plots"),
+    )
+
+    # ================================================================
+    # 📡 新增：RF / Linear 多指标雷达图（不改变原有结果与绘图）
+    # ================================================================
+    save_rf_linear_radar_comparison(
+        dfs,
+        predicted_dfs,
+        linear_predicted_dfs,
+        meta,
+        save_root=save_root,
     )
 
     # ================================================================
