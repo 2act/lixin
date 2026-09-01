@@ -1,0 +1,101 @@
+[36m[2026-09-01 23:49:48] 计时器启动[0m
+[32m[2026-09-01 23:49:48] loading file: data/Mixture/3.xlsx[0m
+[32m[2026-09-01 23:49:48] loading file: data/Mixture/5.xlsx[0m
+[32m[2026-09-01 23:49:48] loading file: data/Mixture/1.xlsx[0m
+[32m[2026-09-01 23:49:48] loading file: data/Mixture/7.xlsx[0m
+[32m[2026-09-01 23:49:49] loading file: data/Mixture/6.xlsx[0m
+[32m[2026-09-01 23:49:49] loading file: data/Mixture/10.xlsx[0m
+[32m[2026-09-01 23:49:49] loading file: data/Mixture/2.xlsx[0m
+[32m[2026-09-01 23:49:49] loading file: data/Mixture/9.xlsx[0m
+[32m[2026-09-01 23:49:49] loading file: data/Mixture/4.xlsx[0m
+[32m[2026-09-01 23:49:49] loading file: data/Mixture/8.xlsx[0m
+[36m[2026-09-01 23:49:49] 公共列 (3 个)：['100', 'Voltage', '1'][0m
+最佳组合索引： (0, 2, 4)
+组合大小： 3
+公共列数： 13
+公共列名： ['1', '10', '100', '15', '20', '3', '30', '40', '5', '50', '60', '80', 'Voltage']
+[33m[2026-09-01 23:49:49] 新的公共列 (13 个)：['30', '80', '3', '10', '20', '50', '1', '40', '15', '100', 'Voltage', '5', '60'][0m
+[32m[2026-09-01 23:49:49] 🧩 构建特征与标签...[0m
+[32m[2026-09-01 23:49:49] ⚙️ 训练模型 + 交叉验证...[0m
+[32m[2026-09-01 23:49:54] ✅ 模型训练完成，交叉验证平均 RMSE = %.6f 9.2752483658541e-05[0m
+[32m[2026-09-01 23:49:54] 💾 模型与结果已保存到 %s predicted_results/Mixture[0m
+[32m[2026-09-01 23:49:54] 📐 训练传统 LinearRegression 基线 + 交叉验证...[0m
+[32m[2026-09-01 23:49:55] 📊 RandomForest vs LinearRegression:[0m
+[32m[2026-09-01 23:49:55]    RF     -> RMSE=%.6f, MAE=%.6f, R2=%.6f 9.2752483658541e-05 4.573345404444449e-05 0.9757251316376396[0m
+[32m[2026-09-01 23:49:55]    Linear -> RMSE=%.6f, MAE=%.6f, R2=%.6f 0.00013732314495631457 9.1276258798384e-05 0.9429413924043125[0m
+[32m[2026-09-01 23:49:55]    RF relative RMSE improvement over Linear = %.2f%% 32.456772900119965[0m
+[32m[2026-09-01 23:49:55]    RF relative MAE improvement over Linear = %.2f%% 49.89556468844429[0m
+[32m[2026-09-01 23:49:57] 🔮 预测所有 DataFrame ...[0m
+[32m[2026-09-01 23:49:57] 📏 评估预测性能 ...[0m
+[32m[2026-09-01 23:49:57] 📐 使用传统 LinearRegression 对所有 DataFrame 进行预测 ...[0m
+[36m[2026-09-01 23:50:01] rmse_mean: 2.924071780953287e-05
+mae_mean: 1.5222342696296238e-05
+r2_mean: 0.9970186377810308
+[0m
+[32m[2026-09-01 23:50:01] 🎨 绘制并保存预测曲线 ...[0m
+[32m[2026-09-01 23:50:04] 💾 保存实验结果 ...[0m
+[36m[2026-09-01 23:50:04] ✅ 全部实验完成，结果保存在：predicted_results/Mixture/predicted_results[0m
+[32m[2026-09-01 23:50:04] loading file: data/Carbendazim/3.xlsx[0m
+[32m[2026-09-01 23:50:04] loading file: data/Carbendazim/5.xlsx[0m
+[32m[2026-09-01 23:50:04] loading file: data/Carbendazim/1.xlsx[0m
+[32m[2026-09-01 23:50:04] loading file: data/Carbendazim/7.xlsx[0m
+[32m[2026-09-01 23:50:05] loading file: data/Carbendazim/6.xlsx[0m
+[32m[2026-09-01 23:50:05] loading file: data/Carbendazim/10.xlsx[0m
+[32m[2026-09-01 23:50:05] loading file: data/Carbendazim/2.xlsx[0m
+[32m[2026-09-01 23:50:05] loading file: data/Carbendazim/9.xlsx[0m
+[32m[2026-09-01 23:50:05] loading file: data/Carbendazim/4.xlsx[0m
+[32m[2026-09-01 23:50:05] loading file: data/Carbendazim/8.xlsx[0m
+[36m[2026-09-01 23:50:05] 公共列 (18 个)：['30', '200', '120', '250', '2', '3', '25', '5', '10', '20', '50', '1', '40', '15', '100', 'Voltage', '80', '60'][0m
+[32m[2026-09-01 23:50:05] 🧩 构建特征与标签...[0m
+[32m[2026-09-01 23:50:05] ⚙️ 训练模型 + 交叉验证...[0m
+[32m[2026-09-01 23:50:19] ✅ 模型训练完成，交叉验证平均 RMSE = %.6f 2.752017547285806e-05[0m
+[32m[2026-09-01 23:50:19] 💾 模型与结果已保存到 %s predicted_results/Carbendazim[0m
+[32m[2026-09-01 23:50:19] 📐 训练传统 LinearRegression 基线 + 交叉验证...[0m
+[32m[2026-09-01 23:50:19] 📊 RandomForest vs LinearRegression:[0m
+[32m[2026-09-01 23:50:19]    RF     -> RMSE=%.6f, MAE=%.6f, R2=%.6f 2.752017547285806e-05 1.6613365155555575e-05 0.9977330402904306[0m
+[32m[2026-09-01 23:50:19]    Linear -> RMSE=%.6f, MAE=%.6f, R2=%.6f 4.38852910921101e-05 3.2333486409960755e-05 0.9938510784934692[0m
+[32m[2026-09-01 23:50:19]    RF relative RMSE improvement over Linear = %.2f%% 37.2906621147928[0m
+[32m[2026-09-01 23:50:19]    RF relative MAE improvement over Linear = %.2f%% 48.61870153774197[0m
+[32m[2026-09-01 23:50:21] 🔮 预测所有 DataFrame ...[0m
+[32m[2026-09-01 23:50:22] 📏 评估预测性能 ...[0m
+[32m[2026-09-01 23:50:22] 📐 使用传统 LinearRegression 对所有 DataFrame 进行预测 ...[0m
+[36m[2026-09-01 23:50:37] rmse_mean: 8.402000750778341e-06
+mae_mean: 5.4330800323809735e-06
+r2_mean: 0.9996864441085094
+[0m
+[32m[2026-09-01 23:50:37] 🎨 绘制并保存预测曲线 ...[0m
+[32m[2026-09-01 23:50:51] 💾 保存实验结果 ...[0m
+[36m[2026-09-01 23:50:51] ✅ 全部实验完成，结果保存在：predicted_results/Carbendazim/predicted_results[0m
+[33m[2026-09-01 23:50:51] folder None skipped![0m
+[32m[2026-09-01 23:50:51] loading file: data/Chlorantraniliformamide/3.xlsx[0m
+[32m[2026-09-01 23:50:51] loading file: data/Chlorantraniliformamide/5.xlsx[0m
+[32m[2026-09-01 23:50:51] loading file: data/Chlorantraniliformamide/1.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/7.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/6.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/10.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/2.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/9.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/4.xlsx[0m
+[32m[2026-09-01 23:50:52] loading file: data/Chlorantraniliformamide/8.xlsx[0m
+[36m[2026-09-01 23:50:52] 公共列 (10 个)：['30', '100', '10', '20', '1', '40', '5', 'Voltage', '80', '60'][0m
+[32m[2026-09-01 23:50:52] 🧩 构建特征与标签...[0m
+[32m[2026-09-01 23:50:52] ⚙️ 训练模型 + 交叉验证...[0m
+[32m[2026-09-01 23:51:01] ✅ 模型训练完成，交叉验证平均 RMSE = %.6f 3.734790355710433e-05[0m
+[32m[2026-09-01 23:51:01] 💾 模型与结果已保存到 %s predicted_results/Chlorantraniliformamide[0m
+[32m[2026-09-01 23:51:01] 📐 训练传统 LinearRegression 基线 + 交叉验证...[0m
+[32m[2026-09-01 23:51:01] 📊 RandomForest vs LinearRegression:[0m
+[32m[2026-09-01 23:51:01]    RF     -> RMSE=%.6f, MAE=%.6f, R2=%.6f 3.734790355710433e-05 1.8635186800000012e-05 0.9970937002838965[0m
+[32m[2026-09-01 23:51:01]    Linear -> RMSE=%.6f, MAE=%.6f, R2=%.6f 9.204866239387509e-05 5.8961274848455105e-05 0.982525243714713[0m
+[32m[2026-09-01 23:51:01]    RF relative RMSE improvement over Linear = %.2f%% 59.4259138744536[0m
+[32m[2026-09-01 23:51:01]    RF relative MAE improvement over Linear = %.2f%% 68.39419288694656[0m
+[32m[2026-09-01 23:51:02] 🔮 预测所有 DataFrame ...[0m
+[32m[2026-09-01 23:51:04] 📏 评估预测性能 ...[0m
+[32m[2026-09-01 23:51:04] 📐 使用传统 LinearRegression 对所有 DataFrame 进行预测 ...[0m
+[36m[2026-09-01 23:51:12] rmse_mean: 1.12608938148404e-05
+mae_mean: 6.173400400000077e-06
+r2_mean: 0.9995810109810408
+[0m
+[32m[2026-09-01 23:51:12] 🎨 绘制并保存预测曲线 ...[0m
+[32m[2026-09-01 23:51:19] 💾 保存实验结果 ...[0m
+[36m[2026-09-01 23:51:19] ✅ 全部实验完成，结果保存在：predicted_results/Chlorantraniliformamide/predicted_results[0m
+[36m[2026-09-01 23:51:19] 耗时: 90.8104 秒[0m

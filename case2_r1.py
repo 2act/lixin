@@ -30,17 +30,21 @@ from log import log
 # 1️⃣ 处理列名
 def clean_col(col):
     """
-    清洗列名：
-    1️⃣ 提取列名中的数字部分（例如 '05ul' → '5', '0.1ul' → '0.1'）
-    2️⃣ 若无数字部分，则保留原列名
-    3️⃣ 若以0开头，则将列名改为 '0'
-    4️⃣ 若是纯数字，则去除前导0
-    """
-    col = str(col)
+    清洗普通列名：
+    1️⃣ 对零浓度重复测量列（如 '0-1'、'0-2'）原样保留；
+    2️⃣ 对普通浓度列提取数字部分（例如 '1ul' → '1'、'10ul' → '10'）；
+    3️⃣ 若无数字部分，则保留原列名；
+    4️⃣ 若是单一数字，则去除无意义的前导0。
 
-    # 如果是以0开头，则直接改为 '0'
-    if col.startswith("0") and not col.startswith("0."):
-        return "0"
+    注意：pandas 在读取“重复的 0 表头”时可能自动改写成 0、0.1、0.2 ...。
+    这类零浓度重复列由 normalize_columns() 统一恢复为 0-1、0-2、0-3 ...，
+    不在本函数中处理。
+    """
+    col = str(col).strip()
+
+    # 显式写成 0-1、0-2 ... 的零浓度重复列直接原样保留。
+    if re.fullmatch(r"0-\d+", col):
+        return col
 
     # 提取数字（支持小数）
     nums = re.findall(r"\d+\.?\d*", col)
@@ -53,8 +57,49 @@ def clean_col(col):
         except ValueError:
             return num
     else:
-        # 如果没有数字部分，则保留原样
+        # 含多个数字或没有数字时保留原表头
         return col
+
+
+def normalize_columns(columns):
+    """
+    统一处理 Excel 表头，并保证零浓度重复测量列具有唯一列名。
+
+    目标格式示例：
+        0-1, 0-2, 1ul, 3ul, 5ul, ...
+    清洗后：
+        0-1, 0-2, 1, 3, 5, ...
+
+    兼容 pandas 对重复表头的自动改名：
+        0, 0.1, 0.2, ...
+    会依次恢复为：
+        0-1, 0-2, 0-3, ...
+
+    已经明确写成 0-1、0-2 ... 的列保持原样。
+    """
+    normalized = []
+    zero_repeat_count = 0
+
+    for col in columns:
+        col_str = str(col).strip()
+
+        # 已经是明确的零浓度重复列，直接保留，并同步编号计数。
+        match = re.fullmatch(r"0-(\d+)", col_str)
+        if match:
+            normalized.append(col_str)
+            zero_repeat_count = max(zero_repeat_count, int(match.group(1)))
+            continue
+
+        # pandas 对重复表头会自动生成 0、0.1、0.2 ...。
+        # 对本项目的数据格式，这些都表示零浓度重复测量列，而不是实际的 0.x 浓度。
+        if col_str == "0" or re.fullmatch(r"0\.\d+", col_str):
+            zero_repeat_count += 1
+            normalized.append(f"0-{zero_repeat_count}")
+            continue
+
+        normalized.append(clean_col(col_str))
+
+    return normalized
 
 
 # 2️⃣ 按照“实际数值大小”排序列（仅对能转为数字的列排序）
@@ -74,8 +119,9 @@ def extract_data_from_file(filepath):
     df = pd.read_excel(filepath)
     # 删除列名中含下划线的列
     df = df[[c for c in df.columns if "_" not in str(c)]]
-    # 处理df的列
-    df.columns = [clean_col(c) for c in df.columns]
+    # 处理df的列。零浓度重复测量列统一恢复为唯一的 0-1、0-2、0-3 ...，
+    # 防止 pandas 自动改名后再次清洗造成重复列。
+    df.columns = normalize_columns(df.columns)
     # log.info(df.columns)
     # 按照实际数值大小排序
     df = df[sorted(df.columns, key=sort_key)]
@@ -789,7 +835,7 @@ def full_experiment_pipeline(
         height=700,
     )
 
-    fig.show()
+    # fig.show()
 
     # fig.write_html(f"{save_root}/residual_cloud_output1.html", auto_open=True)
 
@@ -991,7 +1037,7 @@ if __name__ == "__main__":
     # 开始计时
     log.start_timer()
 
-    base_dir = "data"  # 子文件夹所在目录
+    base_dir = "data_r1"  # 子文件夹所在目录
 
     # 给定已经运行过的文件夹数量，需要全部运行则设置为0，否则将跳过前 skip_count 个文件夹的运行
     # skip_count = 0
